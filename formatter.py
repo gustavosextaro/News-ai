@@ -204,6 +204,9 @@ class NewsFormatter:
 
         if notify:
             # @here aciona push notification no app mobile do Discord
-            await channel.send("@here", embed=embed)
+            try:
+                await channel.send("@here", embed=embed)
+            except Exception:
+                await channel.send(embed=embed)
         else:
             await channel.send(embed=embed)
