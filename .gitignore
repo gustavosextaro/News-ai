@@ -1,0 +1,17 @@
+# Credenciais — NUNCA commitar
+.env
+ig_session_*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+
+# Sistema
+.DS_Store
+*.log
