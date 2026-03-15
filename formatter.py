@@ -166,23 +166,26 @@ class NewsFormatter:
             await channel.send(embed=embed)
             return
 
+        total = len(articles)
         header = discord.Embed(
             title=section_title,
-            description=f"**{len(articles)} picks** selecionados pra você hoje",
+            description=f"**{total} destaques** selecionados hoje — cada um em sua própria mensagem abaixo 👇",
             color=COLOR_HEADER,
         )
         await channel.send(embed=header)
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(1.0)
 
-        for article in articles:
+        for i, article in enumerate(articles, start=1):
             try:
                 embed = await self.build_article_embed(article, color, translator)
+                embed.set_author(name=f"Notícia {i} de {total}")
                 await channel.send(embed=embed)
-                await asyncio.sleep(0.7)
+                await asyncio.sleep(1.5)
             except Exception as e:
                 print(f"[Formatter] Erro ao enviar artigo: {e}")
 
-        await channel.send("▬" * 20)
+        await channel.send(f"```\n{'─' * 40}\n```")
+        await asyncio.sleep(1.0)
 
     async def send_daily_header(self, channel: discord.TextChannel, notify: bool = False):
         """
@@ -203,9 +206,9 @@ class NewsFormatter:
         embed.set_footer(text="Curadoria automática diária • 17h BRT")
 
         if notify:
-            # @here aciona push notification no app mobile do Discord
+            # @everyone garante push notification para TODOS os membros do servidor
             try:
-                await channel.send("@here", embed=embed)
+                await channel.send("@everyone", embed=embed)
             except Exception:
                 await channel.send(embed=embed)
         else:
