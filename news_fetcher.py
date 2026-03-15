@@ -230,16 +230,42 @@ class NewsFetcher:
 
     # ── Deduplication ────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _title_words(title: str) -> set:
+        """Normaliza título em set de palavras, removendo stopwords curtas."""
+        stop = {"a", "an", "the", "of", "in", "on", "at", "to", "for", "is",
+                "are", "was", "and", "or", "with", "its", "it", "as", "by",
+                "de", "do", "da", "em", "no", "na", "um", "uma", "os", "as"}
+        words = re.sub(r"[^a-z0-9 ]", "", title.lower()).split()
+        return {w for w in words if len(w) > 2 and w not in stop}
+
+    def _is_duplicate(self, title: str, seen_word_sets: list) -> bool:
+        """Retorna True se o título é similar demais a algum já visto (Jaccard >= 0.55)."""
+        words = self._title_words(title)
+        if not words:
+            return False
+        for seen in seen_word_sets:
+            if not seen:
+                continue
+            intersection = words & seen
+            union = words | seen
+            if len(union) > 0 and len(intersection) / len(union) >= 0.55:
+                return True
+        return False
+
     def _deduplicate(self, articles: List[NewsArticle]) -> List[NewsArticle]:
         seen_urls = set()
-        seen_titles = set()
+        seen_word_sets = []
         unique = []
         for art in articles:
-            title_key = art.title.lower()[:60]
-            if art.url not in seen_urls and title_key not in seen_titles:
-                seen_urls.add(art.url)
-                seen_titles.add(title_key)
-                unique.append(art)
+            url_key = art.url.split("?")[0].rstrip("/")
+            if url_key in seen_urls:
+                continue
+            if self._is_duplicate(art.title, seen_word_sets):
+                continue
+            seen_urls.add(url_key)
+            seen_word_sets.append(self._title_words(art.title))
+            unique.append(art)
         return unique
 
     # ── Public methods ───────────────────────────────────────────────────────
